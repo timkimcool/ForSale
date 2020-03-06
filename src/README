@@ -1,0 +1,6 @@
+ForSale Images:
+Canvas size 295 x 450
+
+Compiling in powershell:
+javac *.java    // for compiling entire directory
+java ForSaleClient // run client
