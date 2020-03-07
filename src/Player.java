@@ -20,8 +20,14 @@ public class Player implements Serializable{
 	private String name;
 	private int count;
 	
+	private boolean myTurn;
+	private boolean bidding;
+	
+	
 	public Player(String name) {
 		this.name = name;
+		myTurn = false;
+		bidding = true;
 	}
 	
 	public Player(int count) {
@@ -75,5 +81,23 @@ public class Player implements Serializable{
 	public int getPlayerNumber() {
 		return count;
 	}
+
+	public boolean isMyTurn() {
+		return myTurn;
+	}
+
+	public void setMyTurn(boolean myTurn) {
+		this.myTurn = myTurn;
+	}
+
+	public boolean isBidding() {
+		return bidding;
+	}
+
+	public void setBidding(boolean bidding) {
+		this.bidding = bidding;
+	}
+	
+	
 	
 }

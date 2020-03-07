@@ -2,6 +2,7 @@ import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 
 import javax.imageio.ImageIO;
@@ -127,6 +128,12 @@ public class ForSaleServer extends Application implements ForSaleConstants {
 		private ArrayList<Card> pOffered;
 		private ArrayList<Player> players;
 		
+		// Game state
+		private boolean phase1;
+		private boolean phase2;
+		private int currentBid = 0;
+		private int playerBid;
+		
 		
 		public StartSession(ArrayList<Player> players) {
 			this.players = new ArrayList<Player>();
@@ -152,10 +159,27 @@ public class ForSaleServer extends Application implements ForSaleConstants {
 					for(Card c : pOffered) {
 						p.getObjToPlayer().writeObject(c);
 					}
+					p.getToPlayer().writeBoolean(true); 				// pass phase 1
 				}
 				
 				// Play game
-				while(true) {
+				// phase 1
+				while(phase1) {
+					// player turn
+					Collections.shuffle(players);						// randomize player order
+					for (Player p : players) {
+						if (p.isBidding()) {							// player is bidding/didn't pass yet
+							p.getToPlayer().writeBoolean(true); 		// your turn
+							p.getToPlayer().writeInt(currentBid);		// current bid amount
+							playerBid = p.getFromPlayer().readInt();	// get bid from player
+							if (playerBid == 0) {						// 0 bid = pass
+								p.setBidding(false);
+							} else {
+								currentBid = playerBid;					// current bid;
+							}
+						}
+						
+					}
 					
 				}
 				

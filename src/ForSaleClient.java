@@ -58,9 +58,11 @@ public class ForSaleClient extends Application implements ForSaleConstants{
 	private int minBid;
 	private LabelPane yourPropertyPane;
 	private GridPane playerBidPane;
-	
+	private HBox actionPane;
 	private ArrayList<LabelPane> playerPanes = new ArrayList<LabelPane>();
-
+	// Game State
+	private boolean phase1;
+	private boolean phase2;
 
 	@Override
 	public void start(Stage primaryStage) throws Exception {
@@ -138,6 +140,8 @@ public class ForSaleClient extends Application implements ForSaleConstants{
 	
 	@SuppressWarnings("unchecked")
 	private void connectToServer() {
+		// move variables down from main class into here??
+		
 		try {
 			// create socket to connect to server
 			socket = new Socket(HOST, PORT);
@@ -187,7 +191,16 @@ public class ForSaleClient extends Application implements ForSaleConstants{
 		// @@@ Actual game thread
 		new Thread(() -> {
 			try {
-				
+				boolean phase1 = fromServer.readBoolean();
+				while(phase1) {
+					me.setMyTurn(fromServer.readBoolean());
+					// update buttons
+					Button bidButton = new Button("Bid");
+					Button passButton = new Button("Pass");
+					currentAction.setText("Your turn");
+					actionPane.getChildren().addAll(currentAction, bidButton, passButton);
+					currentBid = fromServer.readInt();
+				}
 			} catch (Exception ex) {
 				ex.printStackTrace();
 			}
