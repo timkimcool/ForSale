@@ -4,3 +4,7 @@ Canvas size 295 x 450
 Compiling in powershell:
 javac *.java    // for compiling entire directory
 java ForSaleClient // run client
+
+1. Find java path: C:\Program Files\Java\jdkxxxx\bin\
+2. Run sysdm.cpl > environment variables > Path (bottom half of screen) and add the new Java path
+3. Close and re-open console

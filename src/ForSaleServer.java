@@ -129,8 +129,8 @@ public class ForSaleServer extends Application implements ForSaleConstants {
 		private ArrayList<Player> players;
 		
 		// Game state
-		private boolean phase1;
-		private boolean phase2;
+		private boolean phase1 = true;
+		private boolean phase2 = true;
 		private int currentBid = 0;
 		private int playerBid;
 		
@@ -153,6 +153,11 @@ public class ForSaleServer extends Application implements ForSaleConstants {
 					p.setFromPlayer(new DataInputStream(p.getPlayerSocket().getInputStream()));
 					p.setObjToPlayer(new ObjectOutputStream(p.getPlayerSocket().getOutputStream()));
 					p.setObjFromPlayer(new ObjectInputStream(p.getPlayerSocket().getInputStream()));
+					// send images
+					p.getObjToPlayer().writeObject(new Card("houseBack.png"));
+					p.getObjToPlayer().writeObject(new Card("background.png", 1));
+					p.getObjToPlayer().writeObject(new Card("dollar.png", 1));
+					// send game values
 					p.getObjToPlayer().writeObject(p);
 					p.getToPlayer().writeInt(houseDeck.getDeck().size());
 					p.getToPlayer().writeInt(playerCount);
@@ -164,27 +169,52 @@ public class ForSaleServer extends Application implements ForSaleConstants {
 				
 				// Play game
 				// phase 1
+				Collections.shuffle(players);						// randomize player order
 				while(phase1) {
 					// player turn
-					Collections.shuffle(players);						// randomize player order
-					for (Player p : players) {
-						if (p.isBidding()) {							// player is bidding/didn't pass yet
-							p.getToPlayer().writeBoolean(true); 		// your turn
-							p.getToPlayer().writeInt(currentBid);		// current bid amount
-							playerBid = p.getFromPlayer().readInt();	// get bid from player
-							if (playerBid == 0) {						// 0 bid = pass
-								p.setBidding(false);
-							} else {
-								currentBid = playerBid;					// current bid;
+					boolean round = true;
+					while (round) {
+						System.out.println("1");
+						for (Player p : players) {
+							if (p.isBidding()) {							// player is bidding/didn't pass yet
+								p.setMyTurn(true);
+								sendToPlayers(p.getPlayerNumber());
+								sendToPlayers(p, currentBid);				// send player (with updated turn) + current bid amount
+								playerBid = p.getFromPlayer().readInt();	// get bid from player
+								System.out.println("player");
+								p = (Player) p.getObjFromPlayer().readObject();
+								if (playerBid == 0) {						// 0 bid = pass
+									p.setBidding(false);
+								} else {									// else player bids
+									currentBid = playerBid;					// current bid;
+								}
+							}
+							
+						}
+						System.out.println("2");
+						// quit current turn if there are players still bidding
+						int stillBidding = 0;
+						for (Player p : players) {
+							if(p.isBidding()) {
+								stillBidding++;
+								if (stillBidding > 1) { break; }
 							}
 						}
-						
-					}
-					
+						if (stillBidding == 1) {
+							round = false;
+							// round reset;
+							offerProperty();
+							for (Player p : players) {
+								p.setBidding(true);
+							}
+						}
+					}	
 				}
 				
 			} catch(IOException ex) {
 				ex.printStackTrace();
+			} catch (ClassNotFoundException e) {
+				e.printStackTrace();
 			}
 			
 		}
@@ -194,7 +224,7 @@ public class ForSaleServer extends Application implements ForSaleConstants {
 
 			// Starting money
 			int money;
-			if (playerCount < 5) {
+			if (playerCount > 4) {
 				money = 14;
 			} else { money = 18; }
 			
@@ -208,8 +238,38 @@ public class ForSaleServer extends Application implements ForSaleConstants {
 		// initialize board information to keep track of
 		// cards, 
 		private void offerProperty() {
+			pOffered.clear();
 			for (int i = 0; i < playerCount; i++) {
 				pOffered.add(houseDeck.removeCard());
+			}
+		}
+		
+		private void sendToPlayers(Object o) {
+			for(Player p : players) {
+				try {
+					p.getObjToPlayer().writeObject(o);
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+		private void sendToPlayers(int i) {
+			for(Player p : players) {
+				try {
+					p.getToPlayer().writeInt(i);
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+		private void sendToPlayers(Object o, int i) {
+			for(Player p : players) {
+				try {
+					p.getObjToPlayer().writeUnshared(o);
+					p.getToPlayer().writeInt(i);
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
 			}
 		}
 	}

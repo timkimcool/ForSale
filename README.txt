@@ -1,11 +1,11 @@
-Practicing networking and JavaFX by desiging board game ForSale based on UI from board game arena.
+Practicing networking and JavaFX by designing board game ForSale based on UI from board game arena.
 
 Currently in progress. Got most of the set up complete. Need to code the actual turns.
 
 To do:
  > Phase 1 turns
  > Phase 2 UI + turns
- > Make resource path relative + serialize card back image
+ > Make resource path relative + serialize card back, coin image
  > Update UI based on window size
  
 Optimization:

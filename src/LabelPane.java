@@ -7,6 +7,7 @@ public class LabelPane implements ForSaleConstants {
 	private VBox VBoxPane;
 	private Label label;
 	private HBox HBoxPane;
+	private int bid;
 	
 	public LabelPane(String label, int width, int height) {
 		this.label = new Label(label);
@@ -44,6 +45,14 @@ public class LabelPane implements ForSaleConstants {
 	public void repaint() {
 		VBoxPane.getChildren().clear();
 		VBoxPane.getChildren().addAll(this.label, this.HBoxPane);
+	}
+
+	public int getBid() {
+		return bid;
+	}
+
+	public void setBid(int bid) {
+		this.bid = bid;
 	}
 	
 	

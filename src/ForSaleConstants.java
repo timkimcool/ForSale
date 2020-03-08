@@ -15,7 +15,7 @@ public interface ForSaleConstants {
 	public static int DRAW = 3;
 	public static int CONTINUE = 4;
 	public static String HOST = "localhost";
-	public static String RESOURCE_PATH = "file:/D:/CS/Eclipse/workspace/ForSale/resources/";
+	public static String RESOURCE_PATH = "file:resources/";
 	public static String PANE_COLOR = "-fx-background-color: rgba(234, 230, 220, 0.5)";
 	public static Font FONT16 = Font.font("Helvetica", FontWeight.BOLD, 16); 
 	public static Font FONT20 = Font.font("Helvetica", FontWeight.BOLD, 20);

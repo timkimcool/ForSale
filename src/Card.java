@@ -19,8 +19,13 @@ public class Card extends ImageView implements ForSaleConstants, Serializable{
 	public Card(String name) {
 		cardImage = new Image(RESOURCE_PATH.concat(name));
 		cardImageView = new ImageView(cardImage);
-
 		resetImage();
+	}
+	
+	// leave image as is
+	public Card(String name, int i) {
+		cardImage = new Image(RESOURCE_PATH.concat(name));
+		cardImageView = new ImageView(cardImage);
 	}
 	
 	
@@ -34,7 +39,6 @@ public class Card extends ImageView implements ForSaleConstants, Serializable{
 	
 	private void writeObject(ObjectOutputStream outStream) throws IOException {
 		outStream.defaultWriteObject();
-		System.out.println(cardImage);
 		ImageIO.write(SwingFXUtils.fromFXImage(cardImage, null), "png", outStream);
 	}
 	

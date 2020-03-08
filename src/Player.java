@@ -6,7 +6,8 @@ public class Player implements Serializable{
 	/**
 	 * 
 	 */
-	private static final long serialVersionUID = 9080621067547329111L;
+	private static final long serialVersionUID = -1128859479092408925L;
+
 	private transient DataInputStream fromPlayer;
 	private transient DataOutputStream toPlayer;
 	private transient ObjectInputStream objFromPlayer;
@@ -19,19 +20,17 @@ public class Player implements Serializable{
 	private ArrayList<Card> currencyCards;
 	private String name;
 	private int count;
-	
-	private boolean myTurn;
-	private boolean bidding;
+	private boolean myTurn = false;
+	private boolean bidding = true;
 	
 	
 	public Player(String name) {
 		this.name = name;
-		myTurn = false;
-		bidding = true;
 	}
 	
 	public Player(int count) {
 		this.count = count;
+		
 	}
 	
 	
@@ -70,7 +69,6 @@ public class Player implements Serializable{
 	public void setObjToPlayer(ObjectOutputStream objToPlayer) {
 		this.objToPlayer = objToPlayer;
 	}
-
 
 	public int getMoney() {
 		return money;

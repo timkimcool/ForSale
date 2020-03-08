@@ -1,6 +1,7 @@
 import java.io.*;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 import javax.imageio.ImageIO;
 
@@ -46,6 +47,7 @@ public class ForSaleClient extends Application implements ForSaleConstants{
 	private ArrayList<Coin> playerMoney = new ArrayList<Coin>();		// don't need?
 	private int playerCount;
 	private int remainingCards;
+	private Image coinImage;
 	
 	// Fields to update
 	private Label currentAction;
@@ -60,19 +62,20 @@ public class ForSaleClient extends Application implements ForSaleConstants{
 	private GridPane playerBidPane;
 	private HBox actionPane;
 	private ArrayList<LabelPane> playerPanes = new ArrayList<LabelPane>();
+	private VBox mainPane;
 	// Game State
 	private boolean phase1;
 	private boolean phase2;
-
+	private HashMap<Integer, LabelPane> labelPanes = new HashMap<Integer, LabelPane>();
 	@Override
 	public void start(Stage primaryStage) throws Exception {
 		// @@@ Create UI to hold interface
-		VBox mainPane = new VBox();
+		mainPane = new VBox();
 		
 		//
 		// Current action
 		//
-		HBox actionPane = new HBox();
+		actionPane = new HBox();
 		actionPane.setAlignment(Pos.CENTER);
 		actionPane.setSpacing(SPACING);
 		currentAction = new Label("Waiting for players...");
@@ -89,7 +92,6 @@ public class ForSaleClient extends Application implements ForSaleConstants{
 		propertyOffered = new LabelPane("Property Offered", 1000, 225);
 		deckPane = new LabelPane("x30", 200, 225);
 		deckPane.getHBox().setAlignment(Pos.TOP_CENTER);
-		deckPane.getHBox().getChildren().add(new Card("houseBack.png").getImageView());
 		deckPane.setFont(FONT20);
 		deckPane.getVBox().setAlignment(Pos.CENTER);
 		HBox pane2 = new HBox();
@@ -114,10 +116,6 @@ public class ForSaleClient extends Application implements ForSaleConstants{
 		// Put it all together
 		//
 		mainPane.getChildren().addAll(actionPane, pane2, playerBidPane, yourBidPane.getVBox(), yourPropertyPane.getVBox());
-		Image background = new Image("file:/D:/CS/Eclipse/workspace/ForSale/resources/background.png");
-		Background backgroundImage = new Background(new BackgroundImage(background, BackgroundRepeat.NO_REPEAT, BackgroundRepeat.NO_REPEAT,
-				BackgroundPosition.CENTER, BackgroundSize.DEFAULT));
-		mainPane.setBackground(backgroundImage);
 		mainPane.setPadding(PADDING);
 		mainPane.setSpacing(SPACING);
 		Scene scene = new Scene(mainPane);
@@ -138,7 +136,6 @@ public class ForSaleClient extends Application implements ForSaleConstants{
 		connectToServer();
 	}
 	
-	@SuppressWarnings("unchecked")
 	private void connectToServer() {
 		// move variables down from main class into here??
 		
@@ -149,30 +146,32 @@ public class ForSaleClient extends Application implements ForSaleConstants{
 			toServer = new DataOutputStream(socket.getOutputStream());
 			objFromServer = new ObjectInputStream(socket.getInputStream());
 			objToServer = new ObjectOutputStream(socket.getOutputStream());
+			// populate images
+			deckPane.getHBox().getChildren().add(((Card) objFromServer.readObject()).getImageView());
+			Image background = ((Card) objFromServer.readObject()).getCardImage();
+			Background backgroundImage = new Background(new BackgroundImage(background, BackgroundRepeat.NO_REPEAT, BackgroundRepeat.NO_REPEAT,
+					BackgroundPosition.CENTER, BackgroundSize.DEFAULT));
+			mainPane.setBackground(backgroundImage);
+			coinImage = ((Card) objFromServer.readObject()).getCardImage();
 			// populate player + money
-			me = (Player) objFromServer.readObject();						// read from server
-			int money = me.getMoney();
+			me = (Player) objFromServer.readObject();						// read Player object from server
 			int playerNumber = me.getPlayerNumber();
-			labelText = "Your current bid: $0 | Your previous bid: $0 | Coins in hand: $" + money +" | Minimum bid: $0";
+			labelText = "Your current bid: $0 | Your previous bid: $0 | Coins in hand: $" + me.getMoney() + " | Minimum bid: $0";
 			yourBidPane.getLabel().setText(labelText);
-			for (int i = 0; i < money; i++) {
-				yourBidPane.getHBox().getChildren().add(new Coin().getImageView());
-			}
+			repaintCoin(me.getMoney(), yourBidPane.getHBox(), true);
 			// populate remaining Cards
-			remainingCards = fromServer.readInt();
-			String labelText2 = "x" + remainingCards;
-			deckPane.getLabel().setText(labelText2);
+			remainingCards = fromServer.readInt();							// read remaining cards from server
+			deckPane.getLabel().setText("x" + remainingCards);
 			
-			playerCount = fromServer.readInt();								// read from server
-			for (int i[] = {0}; i[0] < playerCount; i[0]++) {
-				if (i[0] + 1 == playerNumber) {
-					playerPanes.add(new LabelPane("Player " + (i[0] + 1) + " (YOU) bid $0", 600, 80));
+			playerCount = fromServer.readInt();								// read playerCount from server
+			for (int i = 0; i < playerCount; i++) {
+				if (i + 1 == playerNumber) {
+					labelPanes.put(i + 1, new LabelPane("Player " + (i + 1) + " (YOU) bid $0", 600, 80));
 				} else {
-					playerPanes.add(new LabelPane("Player " + (i[0] + 1) + " bid $0", 600, 80));
-					
+					labelPanes.put(i + 1, new LabelPane("Player " + (i + 1) + " bid $0", 600, 80));
 				}
 
-				playerBidPane.add(playerPanes.get(i[0]).getVBox(), i[0] / 2, i[0] % 2);
+				playerBidPane.add(labelPanes.get(i + 1).getVBox(), i / 2, i % 2);
 			// Button bidButton = new Button("Bid");
 			// Button passButton = new Button("Pass");
 			// actionPane.getChildren().addAll(currentAction, bidButton, passButton);
@@ -184,6 +183,7 @@ public class ForSaleClient extends Application implements ForSaleConstants{
 				Card c = (Card) objFromServer.readObject();
 				propertyOffered.getHBox().getChildren().add(c.getImageView());
 			}
+			phase1 = fromServer.readBoolean();					// read current phase
 		} catch (Exception ex) {
 				ex.printStackTrace();
 		}
@@ -191,16 +191,85 @@ public class ForSaleClient extends Application implements ForSaleConstants{
 		// @@@ Actual game thread
 		new Thread(() -> {
 			try {
-				boolean phase1 = fromServer.readBoolean();
 				while(phase1) {
-					me.setMyTurn(fromServer.readBoolean());
-					// update buttons
-					Button bidButton = new Button("Bid");
-					Button passButton = new Button("Pass");
-					currentAction.setText("Your turn");
-					actionPane.getChildren().addAll(currentAction, bidButton, passButton);
-					currentBid = fromServer.readInt();
-				}
+					int updatePlayer = fromServer.readInt();					// read turn player number
+					System.out.println(updatePlayer + " " + me.getPlayerNumber());
+					if (updatePlayer == me.getPlayerNumber()) {
+						me = ((Player) (objFromServer.readUnshared()));					// read player object from server
+					} else {
+						Player dummy = ((Player) (objFromServer.readObject()));
+					}
+					currentBid = fromServer.readInt();							// read current bid from server
+					
+					String updateText = labelPanes.get(updatePlayer).getLabel().getText();
+					String text = updateText.substring(0, updateText.indexOf('$') - 1);
+					System.out.println(me.isBidding() + " " + me.isMyTurn() + " " + currentBid + " " + me.getPlayerNumber() + " " + updatePlayer);
+					Platform.runLater(() -> {
+						labelPanes.get(updatePlayer).getLabel().setText(text + currentBid);
+						repaintCoin(currentBid, labelPanes.get(updatePlayer).getHBox(), false);
+					});
+					if (me.isMyTurn()) {
+						// update buttons
+						Platform.runLater(() ->
+							actionPane.getChildren().clear());
+						Button bidButton = new Button("Bid");
+						Button passButton = new Button("Pass");
+						Platform.runLater(() ->
+							currentAction.setText("Your turn"));
+						bidButton.setOnAction(e -> {
+							int bid = 0;
+							for (Coin c : playerMoney) {
+								if (c.isSelected()) {
+									bid++;
+								}
+							}
+							if (bid > currentBid) {
+								me.setMoney(me.getMoney() - bid);
+								try {
+									toServer.writeInt(bid);
+									System.out.println(bid + " " + me.getMoney());
+									Platform.runLater(() -> {
+										repaintCoin(me.getMoney(), yourBidPane.getHBox(), true);
+										waiting();
+									});
+									me.setMyTurn(false);
+									System.out.println("client 1");
+									objToServer.writeObject(me);
+								} catch (IOException e1) {
+									e1.printStackTrace();
+								}
+							} else { 
+								Platform.runLater(() ->
+									currentAction.setText("Your bid must be greater than $" + currentBid));
+							}
+						});
+						passButton.setOnAction(e -> {
+							try {
+								toServer.writeInt(0);
+								Platform.runLater(() ->
+									waiting());
+								me.setMyTurn(false);
+								objToServer.writeObject(me);
+							} catch (IOException e1) {
+								e1.printStackTrace();
+							}
+						});
+						System.out.println("my money: " + me.getMoney());
+						Platform.runLater(() -> {
+							actionPane.getChildren().addAll(currentAction, bidButton, passButton);
+							labelText = "Your current bid: $0 | Your previous bid: $0 | Coins in hand: $" + me.getMoney() + " | Minimum bid: $" + (currentBid + 1);
+							yourBidPane.getLabel().setText(labelText);
+						});
+					} else {
+						Platform.runLater(() -> {
+							waiting();
+							// waitForPlayerAction(); ???
+							labelText = "Your current bid: $0 | Your previous bid: $0 | Coins in hand: $" + me.getMoney() + " | Minimum bid: $" + (currentBid + 1);
+							yourBidPane.getLabel().setText(labelText);
+						});
+					}
+					
+				}								// while loop
 			} catch (Exception ex) {
 				ex.printStackTrace();
 			}
@@ -214,6 +283,26 @@ public class ForSaleClient extends Application implements ForSaleConstants{
 		waiting = true;
 	}
 	
+	private void repaintCoin(int coins, HBox hBox, boolean me) {
+		hBox.getChildren().clear();
+		if (me) {
+			for (int i = 0; i < coins; i++) {
+				playerMoney.add(new Coin(yourBidPane, coinImage, true));
+			}
+			for (Coin c : playerMoney) {
+				hBox.getChildren().add(c.getImageView());
+			}
+		} else {
+			for (int i = 0; i < coins; i++) {
+				hBox.getChildren().add(new Coin(yourBidPane, coinImage).getImageView());
+			}
+		}
+	}
+	private void waiting() {
+		actionPane.getChildren().clear();
+		currentAction.setText("Waiting for other players...");
+		actionPane.getChildren().add(currentAction);
+	}
 	/**
 	 * Main method for IDE usage only; not needed from command line
 	 */

@@ -5,16 +5,21 @@ import javafx.scene.paint.Color;
 
 public class Coin implements ForSaleConstants{
 	private ImageView coinImageView;
-	private static String name = "dollar.png";
-	
-	
-	public Coin() {
-		Image coinImage = new Image(RESOURCE_PATH.concat(name));
+	private boolean selected = false;
+	private LabelPane yourBidPane;
+	static Image coinImage;
+
+	public Coin(LabelPane yourBidPane, Image image) {
+		coinImage = image;
 		coinImageView = new ImageView(coinImage);
 		coinImageView.setPreserveRatio(true);
 		coinImageView.setFitWidth(COIN_WIDTH);
+		this.yourBidPane = yourBidPane;
+	}
+	
+	public Coin(LabelPane yourBidPane, Image image, boolean clickable) {
+		this(yourBidPane, image);
 		this.enableClick();
-
 	}
 	
 	public ImageView getImageView() {
@@ -29,8 +34,24 @@ public class Coin implements ForSaleConstants{
 		coinImageView.setOnMouseClicked(e -> {
 			if (coinImageView.getEffect() == null) {
 				coinImageView.setEffect(new DropShadow(10, Color.RED));
-			} else { coinImageView.setEffect(null); }
+				selected = true;
+				yourBidPane.setBid(yourBidPane.getBid() + 1);
+				String bidText = "Your current bid: $" + yourBidPane.getBid() + " ";
+				String labelText = yourBidPane.getLabel().getText();
+				yourBidPane.getLabel().setText(bidText + labelText.substring(labelText.indexOf('|')));
+			} else { 
+				coinImageView.setEffect(null); 
+				selected = false;
+				yourBidPane.setBid(yourBidPane.getBid() - 1);
+				String bidText = "Your current bid: $" + yourBidPane.getBid() + " ";
+				String labelText = yourBidPane.getLabel().getText();
+				yourBidPane.getLabel().setText(bidText + labelText.substring(labelText.indexOf('|')));
+			}
 		});
+	}
+
+	public boolean isSelected() {
+		return selected;
 	}
 	
 	/*
