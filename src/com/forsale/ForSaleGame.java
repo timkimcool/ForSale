@@ -40,13 +40,13 @@ public class ForSaleGame extends Application implements ForSaleConstants{
 		*/
 		Label text = new Label();
 		text.setAlignment(Pos.CENTER);
-		text.setText("Server or Client?");
+		text.setText("Create or Join?");
 		text.setFont(Font.font("Verdana", FontWeight.BOLD, 25));
 		text.setBackground(new Background(new BackgroundFill(Color.rgb(234, 230, 220, 0.8), CornerRadii.EMPTY, Insets.EMPTY)));
 		HBox hbox = new HBox();
 		hbox.setSpacing(SPACING);
 		hbox.setAlignment(Pos.CENTER);
-		Button serverButton = new Button("Server");	
+		Button serverButton = new Button("Create");	
 		Button submitButton = new Button("Submit");
 		submitButton.setDefaultButton(true);
 		TextField userInput = new TextField();
@@ -76,17 +76,9 @@ public class ForSaleGame extends Application implements ForSaleConstants{
 			mainControlPane.getChildren().clear();
 			mainControlPane.getChildren().addAll(text, userInput, submitButton);
 		});
-		Button clientButton = new Button("Client");
+		Button clientButton = new Button("Join");
 		clientButton.setOnAction(e -> {
 			text.setText("Enter your name: ");
-			/*
-			submitButton.addEventHandler(KeyEvent.KEY_PRESSED, ev -> {
-				if (ev.getCode() == KeyCode.ENTER) {
-					submitButton.fire();
-					ev.consume();
-				}
-			});
-			*/
 			submitButton.setOnAction(e1 -> {
 				String playerName = userInput.getText();
 				Pattern pattern = Pattern.compile(IP_PATTERN);

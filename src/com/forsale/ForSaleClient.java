@@ -389,7 +389,7 @@ public class ForSaleClient extends Application implements ForSaleConstants{
 							currentAction.setFont(FONT20);
 							currentAction.setTextFill(Color.BLACK);
 						} else {
-							labelPanes.get(j).getLabel().setText(nameMap.get(playerNumber) + " got " + placement + "!\n" + "Total Score: " + playerScore + "\n" + "Total Money: " + playerMoney);
+							labelPanes.get(playerNumber).getLabel().setText(nameMap.get(playerNumber) + " got " + placement + "!\n" + "Total Score: " + playerScore + "\n" + "Total Money: " + playerMoney);
 						}
 						labelPanes.get(j).getVBox().getChildren().add(labelPanes.get(j).getLabel());
 						labelPanes.get(j).getVBox().setAlignment(Pos.CENTER);
@@ -541,7 +541,7 @@ public class ForSaleClient extends Application implements ForSaleConstants{
 				me.setMyTurn(false);
 				me.setBidding(false);
 				// return half the coins
-				me.setMoney(me.getMoney() + bid / 2);
+				me.setMoney(me.getMoney() + (bid / 2));
 				Platform.runLater(() -> {
 				if(bid > 0) {
 					repaintCoin(me.getMoney(), yourBidPane.getFlowPane(), true);
